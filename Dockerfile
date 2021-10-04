@@ -1,7 +1,7 @@
 FROM alpine:3.12.0
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 # Installing GHC build dependencies
-RUN apk add --no-cache autoconf automake binutils-gold build-base coreutils cpio linux-headers libffi-dev musl-dev ncurses-dev ncurses-static python3 zlib-dev xz bash git wget sudo grep curl gmp-dev cabal ghc py3-sphinx texlive texlive-xetex texmf-dist-latexextra ttf-dejavu
+RUN apk add --no-cache autoconf automake binutils-gold build-base coreutils cpio linux-headers libffi-dev musl-dev ncurses-dev ncurses-static python3 zlib-dev xz bash git wget sudo grep curl gmp-dev cabal py3-sphinx texlive texlive-xetex texmf-dist-latexextra ttf-dejavu
 
 ENV GHC /opt/ghc/8.10.7/bin/ghc
 ENV CABAL /usr/bin/cabal
@@ -12,6 +12,7 @@ RUN curl -L https://downloads.haskell.org/~ghc/8.10.7/ghc-8.10.7-x86_64-alpine3.
 	cd /tmp/ghc-8.10.7* && ./configure --disable-ld-override --prefix=/opt/ghc/8.10.7 && make install && \
 	cd && \
 	rm -Rf /tmp/ghc-8.10.7-* && \
+	rm -f /tmp/ghc.tar.xz && \
 	/opt/ghc/8.10.7/bin/ghc --version && \
 	mkdir -p /opt/toolchain/store && $CABAL user-config update && $CABAL v2-update && $CABAL \
 	  --store-dir=/opt/toolchain/store \
@@ -22,8 +23,7 @@ RUN curl -L https://downloads.haskell.org/~ghc/8.10.7/ghc-8.10.7-x86_64-alpine3.
 	  --enable-static \
 	  --install-method=copy \
 	  --installdir=/opt/toolchain/bin \
-	  hscolour happy alex hlint-3.2 && \
-	rm -rf /opt/ghc/8.10.7
+	  hscolour happy alex hlint-3.2
 
 ENV ALEX /opt/toolchain/bin/alex
 ENV HAPPY /opt/toolchain/bin/happy
@@ -35,7 +35,4 @@ RUN adduser ghc --gecos 'GHC builds' --disabled-password && echo 'ghc ALL = NOPA
 USER ghc
 WORKDIR /home/ghc/
 
-COPY entry.sh /bin/entry.sh
-
-ENTRYPOINT ["/bin/entry.sh"]
 CMD ["bash"]
